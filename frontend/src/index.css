@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color:#0F172A; background:#F8FAFC; }
+*{box-sizing:border-box} html{background:#F8FAFC;scroll-behavior:smooth} body{margin:0;min-width:320px;min-height:100vh;background:#F8FAFC;-webkit-tap-highlight-color:transparent} button,a,input,select,textarea{font:inherit} button,a{touch-action:manipulation} ::selection{background:#CCFBF1;color:#0F172A}
+@keyframes slideDown{from{opacity:0;transform:translateY(-14px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes sheetUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes glassFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+.ios-glass-nav{isolation:isolate;overflow:hidden;animation:glassFloat 5s ease-in-out infinite;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(248,250,252,.76))!important;box-shadow:0 18px 55px rgba(15,23,42,.13),inset 0 1px 0 rgba(255,255,255,.95);border-color:rgba(226,232,240,.82)!important}
+.ios-glass-nav:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.68),rgba(255,255,255,.12) 42%,rgba(255,255,255,.34));opacity:.55;z-index:-1}
+
+/* v1.0 shell hardening: readable role navigation on dark sidebars */
+@media (min-width:1280px){aside nav a:not([aria-current="page"]){color:rgba(255,255,255,.78)!important}aside nav a:not([aria-current="page"]):hover{color:#fff!important}}

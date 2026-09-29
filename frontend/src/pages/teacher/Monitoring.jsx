@@ -1,0 +1,10 @@
+import { useMemo } from 'react'
+import { BarChart3, Gift, ClipboardCheck, GraduationCap } from 'lucide-react'
+import PageHeader from '../../components/ui/PageHeader'
+import Loader from '../../components/ui/Loader'
+import { useFetch } from '../../hooks/useFetch'
+import { teacherService } from '../../services/teacher.service'
+import { gradeService } from '../../services/grade.service'
+import { attendanceService } from '../../services/attendance.service'
+import { bonusService } from '../../services/bonus.service'
+export default function Monitoring(){const students=useFetch(()=>teacherService.getMyStudents(),[]),grades=useFetch(()=>gradeService.getAll(),[]),attendance=useFetch(()=>attendanceService.getAll(),[]),bonuses=useFetch(()=>bonusService.getAll(),[]);const stats=useMemo(()=>{const gs=grades.data||[],at=attendance.data||[],bs=bonuses.data||[];return {avg:gs.length?(gs.reduce((a,b)=>a+Number(b.value),0)/gs.length).toFixed(1):'—',present:at.length?Math.round(at.filter(x=>x.status==='PRESENT').length/at.length*100):0,bonus:bs.reduce((a,b)=>a+Number(b.points),0),students:(students.data||[]).length}},[grades.data,attendance.data,bonuses.data,students.data]);if([students,grades,attendance,bonuses].some(x=>x.isLoading))return <Loader/>;const cards=[[GraduationCap,'O‘quvchilar',stats.students],[BarChart3,'O‘rtacha baho',stats.avg],[ClipboardCheck,'Kelish',`${stats.present}%`],[Gift,'Berilgan bonus',stats.bonus]];return <div><PageHeader title="Natijalar" description="Siz dars beradigan sinflarning umumiy ko‘rsatkichlari."/><div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{cards.map(([Icon,l,v])=><div key={l} className="rounded-3xl border border-slate-200 bg-white p-4"><div className="grid h-10 w-10 place-items-center rounded-xl bg-teal-50 text-teal-700"><Icon size={18}/></div><p className="mt-4 text-xs text-slate-500">{l}</p><p className="mt-1 text-2xl font-bold text-slate-950">{v}</p></div>)}</div></div>}
