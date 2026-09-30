@@ -35,17 +35,33 @@ export class ChatService {
     if (!mine.length) return []
     const ids = mine.map((p) => p.conversationId)
     const allParticipants = await this.participants.find({ where: { conversationId: In(ids) }, relations: { user: true } })
-    const result = await Promise.all(ids.map(async (id) => {
+    // Fetch message metadata in two batched queries instead of 2 queries per conversation.
+    // This keeps the inbox responsive as the number of chats grows.
+    const lastRows = await this.messages.createQueryBuilder('m')
+      .distinctOn(['m.conversationId'])
+      .where('m.conversationId IN (:...ids)', { ids })
+      .orderBy('m.conversationId', 'ASC')
+      .addOrderBy('m.createdAt', 'DESC')
+      .getMany()
+    const unreadRows = await this.messages.createQueryBuilder('m')
+      .select('m.conversationId', 'conversationId')
+      .addSelect('COUNT(*)', 'count')
+      .where('m.conversationId IN (:...ids)', { ids })
+      .andWhere('m.isRead = false')
+      .andWhere('m.senderId != :userId', { userId })
+      .groupBy('m.conversationId')
+      .getRawMany<{ conversationId: string; count: string }>()
+    const lastByConversation = new Map(lastRows.map((m) => [m.conversationId, m]))
+    const unreadByConversation = new Map(unreadRows.map((r) => [r.conversationId, Number(r.count)]))
+    const result = ids.map((id) => {
       const people = allParticipants.filter((p) => p.conversationId === id && p.userId !== userId)
-      const last = await this.messages.findOne({ where: { conversationId: id }, order: { createdAt: 'DESC' } })
-      const unreadMine = await this.messages.find({ where: { conversationId: id, isRead: false } })
       return {
         id,
         people: people.map((p) => ({ id: p.user.id, firstName: p.user.firstName, lastName: p.user.lastName, role: p.user.role, avatarUrl: p.user.avatarUrl })),
-        lastMessage: last ?? null,
-        unreadCount: unreadMine.filter((message) => message.senderId !== userId).length,
+        lastMessage: lastByConversation.get(id) ?? null,
+        unreadCount: unreadByConversation.get(id) ?? 0,
       }
-    }))
+    })
     return result.sort((a, b) => String(b.lastMessage?.createdAt ?? '').localeCompare(String(a.lastMessage?.createdAt ?? '')))
   }
 

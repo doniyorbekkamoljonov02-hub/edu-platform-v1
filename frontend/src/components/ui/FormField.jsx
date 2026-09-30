@@ -9,6 +9,6 @@ function FormField({ label, error, children }) {
 }
 
 export const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
+  'w-full rounded-lg border border-gray-300 px-3 py-2 text-base sm:text-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary'
 
 export default FormField

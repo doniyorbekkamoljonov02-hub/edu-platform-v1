@@ -10,5 +10,11 @@
 .ios-glass-nav{isolation:isolate;overflow:hidden;animation:glassFloat 5s ease-in-out infinite;background:linear-gradient(135deg,rgba(255,255,255,.92),rgba(248,250,252,.76))!important;box-shadow:0 18px 55px rgba(15,23,42,.13),inset 0 1px 0 rgba(255,255,255,.95);border-color:rgba(226,232,240,.82)!important}
 .ios-glass-nav:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.68),rgba(255,255,255,.12) 42%,rgba(255,255,255,.34));opacity:.55;z-index:-1}
 
-/* v1.0 shell hardening: readable role navigation on dark sidebars */
+/* v1.1 shell hardening: readable role navigation on dark sidebars */
 @media (min-width:1280px){aside nav a:not([aria-current="page"]){color:rgba(255,255,255,.78)!important}aside nav a:not([aria-current="page"]):hover{color:#fff!important}}
+
+/* v1.1 mobile UX: iOS Safari zooms focused controls below 16px. */
+@media (max-width: 767px){
+  input:not([type="checkbox"]):not([type="radio"]), select, textarea { font-size:16px !important; }
+}
+input,select,textarea{max-width:100%;}

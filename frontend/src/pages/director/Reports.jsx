@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { BarChart3, CalendarDays, ClipboardCheck, FilePlus2, Gift, GraduationCap, TrendingUp, Users } from 'lucide-react'
+import { BarChart3, CalendarDays, ClipboardCheck, Download, FilePlus2, Gift, GraduationCap, TrendingUp, Users } from 'lucide-react'
 import PageHeader from '../../components/ui/PageHeader'
 import Loader from '../../components/ui/Loader'
 import { reportService } from '../../services/report.service'
@@ -46,6 +46,17 @@ export default function Reports() {
     return { avg, attendanceRate, bonusPoints }
   }, [data])
 
+  function exportCsv() {
+    const rows = [
+      ['Ko‘rsatkich','Qiymat'],
+      ['O‘quvchilar', data.students.length], ['O‘qituvchilar', data.teachers.length],
+      ['O‘rtacha baho', summary.avg], ['Davomat', `${summary.attendanceRate}%`], ['Bonus ballar', summary.bonusPoints],
+    ]
+    const csv = '\ufeff' + rows.map(r => r.map(v => `"${String(v).replaceAll('"','""')}"`).join(',')).join('\n')
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }))
+    const a = document.createElement('a'); a.href = url; a.download = `edu-platform-hisobot-${today()}.csv`; a.click(); URL.revokeObjectURL(url)
+  }
+
   async function createReport() {
     if (!periodStart || !periodEnd || periodStart > periodEnd) { setError('Hisobot sanalarini to‘g‘ri kiriting.'); return }
     setBusy(true); setError('')
@@ -64,7 +75,7 @@ export default function Reports() {
   ]
 
   return <div className="space-y-5">
-    <PageHeader title="Hisobotlar" description="Maktab ko‘rsatkichlarini bir joyda kuzating va davr bo‘yicha hisobot yarating." />
+    <PageHeader title="Hisobotlar" description="Maktab ko‘rsatkichlarini bir joyda kuzating va davr bo‘yicha hisobot yarating." action={<button onClick={exportCsv} className="flex h-10 items-center gap-2 rounded-xl bg-[#0F172A] px-4 text-xs font-black text-white"><Download size={16}/>CSV yuklash</button>} />
     {error && <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div>}
     <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">{cards.map(([label,value,Icon]) => <article key={label} className="rounded-[22px] border border-[#E2E8F0] bg-white p-4 shadow-sm"><div className="mb-5 flex h-10 w-10 items-center justify-center rounded-2xl bg-[#ECFDF5] text-[#0F766E]"><Icon size={19}/></div><p className="text-2xl font-black tracking-tight">{value}</p><p className="mt-1 text-xs font-bold text-[#64748B]">{label}</p></article>)}</section>
     <section className="grid gap-4 lg:grid-cols-[.9fr_1.1fr]">

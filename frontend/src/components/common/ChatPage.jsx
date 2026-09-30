@@ -95,13 +95,23 @@ export default function ChatPage() {
   async function send(payload = {}) {
     if (!active || (!text.trim() && !payload.attachmentUrl)) return
     const value = text
+    const tempId = `local-${Date.now()}-${Math.random().toString(36).slice(2)}`
+    const optimistic = {
+      id: tempId, conversationId: active.id, senderId: currentUserId,
+      text: value.trim() || null, attachmentUrl: payload.attachmentUrl || null,
+      attachmentType: payload.attachmentType || null, isRead: false,
+      createdAt: new Date().toISOString(), pending: true,
+    }
+    // Render immediately. Network confirmation replaces this temporary message.
     setText('')
+    setMessages((current) => [...current, optimistic])
+    tone(430, 'send')
     try {
       const message = await chatService.send(active.id, { text: value, ...payload })
-      setMessages((current) => current.some((m) => m.id === message.id) ? current : [...current, message])
-      tone(430, 'send')
-      loadConversations()
+      setMessages((current) => current.map((m) => m.id === tempId ? message : m).filter((m, i, arr) => arr.findIndex((x) => x.id === m.id) === i))
+      loadConversations().catch(() => {})
     } catch {
+      setMessages((current) => current.filter((m) => m.id !== tempId))
       setText(value)
     }
   }
@@ -152,12 +162,12 @@ export default function ChatPage() {
               <div className={`relative max-w-[84%] rounded-[20px] px-3.5 py-2.5 text-sm shadow-sm ${mine ? 'rounded-br-[6px] bg-[#173B57] text-white' : 'rounded-bl-[6px] border border-[#E5E7EB] bg-white text-[#202635]'}`}>
                 {message.attachmentUrl && <button type="button" onClick={() => setPreview(fileUrl(message.attachmentUrl))} className="mb-2 block overflow-hidden rounded-2xl"><img src={fileUrl(message.attachmentUrl)} alt="Chat rasmi" className="max-h-64 w-full object-cover transition hover:scale-[1.02]"/></button>}
                 {message.text && <p className="whitespace-pre-wrap break-words leading-relaxed">{message.text}</p>}
-                <div className={`mt-1 flex items-center justify-end gap-1 text-[9px] ${mine ? 'text-white/60' : 'text-[#9AA0AE]'}`}><span>{new Date(message.createdAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>{mine && (message.isRead ? <CheckCheck size={13} strokeWidth={2.4}/> : <Check size={13} strokeWidth={2.4}/>)}</div>
+                <div className={`mt-1 flex items-center justify-end gap-1 text-[9px] ${mine ? 'text-white/60' : 'text-[#9AA0AE]'}`}><span>{new Date(message.createdAt).toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })}</span>{mine && (message.pending ? <span className="opacity-70">•••</span> : message.isRead ? <CheckCheck size={13} strokeWidth={2.4}/> : <Check size={13} strokeWidth={2.4}/>)}</div>
                 {mine && <button onClick={() => remove(message.id)} className="absolute -left-9 top-1/2 hidden -translate-y-1/2 rounded-lg bg-white p-2 text-red-500 shadow group-hover:block"><Trash2 size={14}/></button>}
               </div>
             </div>
           })}<div ref={bottomRef}/></div></div>
-          <div className="border-t border-[#E7E9EF] bg-white p-3"><div className="mx-auto flex max-w-2xl items-end gap-2"><input ref={fileRef} type="file" accept="image/*" onChange={upload} className="hidden"/><button onClick={() => fileRef.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EDF4F6] text-[#173B57]"><ImageIcon size={19}/></button><textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} rows={1} placeholder="Xabar yozing..." className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl bg-[#F4F6F8] px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[#173B57]/15"/><button onClick={() => send()} disabled={!text.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#173B57] text-white disabled:opacity-40"><Send size={18}/></button></div></div>
+          <div className="border-t border-[#E7E9EF] bg-white p-3"><div className="mx-auto flex max-w-2xl items-end gap-2"><input ref={fileRef} type="file" accept="image/*" onChange={upload} className="hidden"/><button onClick={() => fileRef.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#EDF4F6] text-[#173B57]"><ImageIcon size={19}/></button><textarea value={text} onChange={(e) => setText(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} rows={1} placeholder="Xabar yozing..." className="max-h-28 min-h-11 flex-1 resize-none rounded-2xl bg-[#F4F6F8] px-4 py-3 text-base sm:text-sm outline-none focus:ring-2 focus:ring-[#173B57]/15"/><button onClick={() => send()} disabled={!text.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#173B57] text-white disabled:opacity-40"><Send size={18}/></button></div></div>
         </> : <div className="m-auto text-center"><MessageCircle size={34} className="mx-auto text-[#173B57]"/><p className="mt-3 text-sm font-bold">Suhbatni tanlang</p><p className="mt-1 text-xs text-[#9296A9]">Xabarlar shu yerda ko‘rinadi.</p></div>}
       </section>
     </div>
